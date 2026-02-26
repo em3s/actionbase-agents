@@ -53,14 +53,22 @@ Examples:
 
 ## Language rules (must be in every CLAUDE.md)
 
-Every language pack's `CLAUDE.md` must include these language rules under `### 언어` / `### Language`:
+Every language pack's `CLAUDE.md` must include language rules under `### 언어` / `### Language`.
+The mode is determined by comparing `allowed_repo` and `upstream_repo` in `.claude/settings.local.json`.
 
+### Fork mode (`allowed_repo ≠ upstream_repo`)
 | Context | Language |
 |---------|----------|
 | Conversation with user | Language pack language |
-| Personal fork artifacts (issues, PRs, commits) | Language pack language |
+| Fork artifacts (issues, PRs, commits) | Language pack language |
 | Code and code comments | Always English |
-| Upstream (`kakao/actionbase`) artifacts | Always English |
+| Upstream artifacts (`/patch-upstream`) | Always English |
+
+### Upstream mode (`allowed_repo == upstream_repo`)
+| Context | Language |
+|---------|----------|
+| Conversation with user | Language pack language |
+| All artifacts (code, commits, PRs, issues) | Always English |
 
 When scaffolding, adapt these rules to the target language in the new `CLAUDE.md`.
 

@@ -14,9 +14,10 @@ Language directories at project root (`ko/`, `en/`, etc.) containing `.claude/` 
 
 ### 0. Language rules in CLAUDE.md
 - Every language pack's `CLAUDE.md` must have a language rules section (`### 언어` or `### Language`)
-- Must define: conversation language, fork artifacts language, code language, upstream artifacts language
-- Code and upstream (`kakao/actionbase`) artifacts must always be English
-- Conversation and fork artifacts must match the language pack's language
+- Must define both fork mode and upstream mode behavior
+- Fork mode: conversation + fork artifacts in language pack language, code + upstream artifacts in English
+- Upstream mode: conversation in language pack language, all artifacts in English
+- Mode is determined by `allowed_repo` vs `upstream_repo` in `settings.local.json`
 
 ### 1. File structure comparison
 - Compare `.claude/` subdirectory listings across all language packs (`agents/`, `commands/`, `rules/`, `skills/`, `codemaps/`)
