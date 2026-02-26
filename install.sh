@@ -93,7 +93,7 @@ else
   done
   printf "\n"                                    >&3
   printf "  > "                                  >&3
-  local choice
+  choice=""
   read -r choice <&3
   exec 3<&-
 
@@ -121,7 +121,9 @@ else
 fi
 
 echo ""
-echo "${MODE^}ing actionbase-agents (lang=$LANG_CODE)..."
+LABEL="Installing"
+[[ "$MODE" == "update" ]] && LABEL="Updating"
+echo "$LABEL actionbase-agents (lang=$LANG_CODE)..."
 
 # CLAUDE.md (from language pack)
 cp "$LANG_DIR/CLAUDE.md" ./CLAUDE.md
@@ -178,7 +180,9 @@ fi
 # ── 7. summary ────────────────────────────────────────────────────────
 
 echo ""
-echo "Done! actionbase-agents ${MODE}ed (lang=$LANG_CODE)."
+DONE_LABEL="installed"
+[[ "$MODE" == "update" ]] && DONE_LABEL="updated"
+echo "Done! actionbase-agents $DONE_LABEL (lang=$LANG_CODE)."
 
 # ── 8. run setup ─────────────────────────────────────────────────────
 
