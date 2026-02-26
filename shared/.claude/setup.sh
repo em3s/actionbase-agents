@@ -59,12 +59,12 @@ with open('$CONFIG', 'w') as f:
 prompt() {
   local label="$1" default="$2"
   if [[ -n "$default" ]]; then
-    printf "  %s [%s]: " "$label" "$default"
+    printf "  %s [%s]: " "$label" "$default" > /dev/tty
   else
-    printf "  %s: " "$label"
+    printf "  %s: " "$label" > /dev/tty
   fi
   local input
-  read -r input
+  read -r input < /dev/tty
   echo "${input:-$default}"
 }
 
