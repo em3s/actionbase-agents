@@ -1,0 +1,87 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "NotebookEdit(*)"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [ -n \"$file\" ] && [ -f \"$file\" ]; then if grep -qE '(API_KEY|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)\\s*=\\s*.[^\"]+.' \"$file\" 2>/dev/null; then echo 'BLOCK: Hardcoded secret detected in file. Use environment variables instead.' >&2; exit 1; fi; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [[ \"$file\" == *.kt ]] || [[ \"$file\" == *.java ]]; then echo '[Advisory] Remember to run build after changes: ./gradlew build'; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=\"$CLAUDE_BASH_COMMAND\"; if [[ \"$cmd\" == *gradlew* ]]; then echo '[Advisory] Consider using background mode (run_in_background) for long-running commands'; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f .claude/hooks/guard-repo.sh && .claude/hooks/guard-repo.sh || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [[ \"$file\" == *.kt ]]; then echo '[Advisory] Run ./gradlew spotlessApply to format Kotlin code'; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [ -n \"$file\" ] && [ -f \"$file\" ]; then if [[ \"$file\" == *.kt ]] || [[ \"$file\" == *.java ]]; then if grep -qE 'println|System\\.out' \"$file\" 2>/dev/null; then echo '[Advisory] Found println/System.out statements. Use proper logging (SLF4J/Logback)'; fi; fi; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Advisory] Session ending. Remember to check for debug statements (println, System.out) before committing.'"
+          }
+        ]
+      }
+    ]
+  }
+}

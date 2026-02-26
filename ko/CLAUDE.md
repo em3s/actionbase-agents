@@ -1,0 +1,74 @@
+# Actionbase Worker Agent
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+[kakao/actionbase](https://github.com/kakao/actionbase) — 대규모 사용자 인터랙션(좋아요, 조회, 팔로우)을 제공하는 데이터베이스. **누가(who)** **무엇을(what)** **어떤 대상에(target)** 했는가.
+
+**기술 스택**: Kotlin, Spring WebFlux (reactive), HBase (스토리지), Kafka (CDC 이벤트)
+
+## Build & Test
+
+```bash
+./gradlew build                    # 전체 빌드
+./gradlew test                     # 전체 테스트
+./gradlew :core:build              # 특정 모듈
+./gradlew build --stacktrace       # 디버깅
+```
+
+## Architecture
+
+```
+Server (WebFlux) → Engine (바인딩) → Core (모델)
+```
+
+| 모듈 | 목적 |
+|------|------|
+| `core` | 데이터 모델, 인코딩, 유효성 검증 |
+| `engine` | Storage/Messaging 바인딩 |
+| `server` | Spring WebFlux API 서버 |
+
+Ecosystem: `cli/`, `website/`, `docker/`, `bin/`, `dev/`, `guides/` 등 도구와 문서.
+
+## .claude/ Structure
+
+- `agents/` — 위임용 서브에이전트 (planner, architect, code-reviewer, security-reviewer, e2e-runner, refactor-cleaner)
+- `commands/` — 슬래시 커맨드 (plan, implement, continue, stage-to-issue, code-review, pr-korean, patch-upstream, bedtime, update-codemaps)
+- `skills/` — 컨텍스트 스킬 (actionbase-concepts, v3-transition, strategic-compact, verification-loop)
+- `rules/` — 항상 적용되는 가이드라인 (보안, 코딩 스타일, 테스트, git 워크플로우, 성능)
+- `codemaps/` — 모듈별 코드맵 (architecture, core, engine, server, data)
+
+## Key Commands
+
+### 개발 워크플로우
+`/plan` → `/implement` → `/continue` → `/stage-to-issue` → `/code-review`
+
+### 활성 커맨드
+- `/code-review` — 최근 변경사항 코드 리뷰
+- `/pr-korean` — 한국어 PR 생성/업데이트
+- `/patch-upstream` — 패치 + 영어 PR 코멘트
+- `/bedtime` — 밤사이 작업할 간단한 태스크 탐색
+
+## Repository Policy
+
+이 Claude는 **한국어 화자와 드래프트를 만드는 작업 도구**다.
+
+### 작업 범위
+- **변경은 `em3s/actionbase`에서만** — 이 레포지토리에서만 커밋, 푸시, 이슈/PR 생성
+- **`kakao/actionbase`는 읽기 전용** — `gh`로 이슈/PR 조회는 가능하지만, 변경(코멘트, 생성, 푸시)은 금지
+- `kakao/actionbase`로의 기여는 사람이 수동으로 하거나 `/patch-upstream`을 사용
+
+### 언어
+- **기본: 한국어** — 대화, 이슈, PR, 커밋 메시지, 리뷰, 계획 등 모든 출력
+- **영어 예외:**
+  - `/patch-upstream` 출력 (`kakao/actionbase`로 직접 전달)
+  - 코드 및 코드 내 주석 (`kakao/actionbase`에 바로 적용 가능해야 함)
+
+## Development Notes
+
+- **코딩 전에 계획** — 요구사항을 이해할 것
+- **테스트를 먼저 작성** — 새 기능에는 TDD
+- **코딩 후 리뷰** — 보안과 품질 확인
+- **자주 커밋** — 작고 집중된 커밋
+- **컨벤션 준수** — 일관성이 중요
