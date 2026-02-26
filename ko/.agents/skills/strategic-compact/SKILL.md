@@ -1,0 +1,1 @@
+../../../.claude/skills/strategic-compact/SKILL.md

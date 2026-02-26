@@ -1,0 +1,20 @@
+# Actionbase agent configuration for Codex
+# Base config shared across all language packs.
+
+model = "o3"
+model_reasoning_effort = "high"
+
+# Sandbox: allow workspace writes (equivalent to Claude's Write/Edit permissions)
+# .git/ and .codex/ are read-only by default.
+sandbox_mode = "workspace-write"
+
+# Approval: require approval for potentially dangerous operations.
+# Closest analog to Claude's guard-repo.sh hook.
+approval_policy = "on-request"
+
+# Web search enabled
+web_search = "live"
+
+# Multi-agent support
+[features]
+multi_agent = true

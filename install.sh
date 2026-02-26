@@ -9,6 +9,12 @@ set -euo pipefail
 #
 # Non-interactive:
 #   bash <(curl -fsSL ...) --lang ko
+#   bash <(curl -fsSL ...) --lang ko --platform both
+#
+# Platform options:
+#   --platform claude   (default) Install Claude Code config only
+#   --platform codex    Install Codex config only
+#   --platform both     Install both Claude Code and Codex configs
 
 REPO="em3s/actionbase-agents"
 BRANCH="main"
@@ -36,12 +42,19 @@ grep -q 'actionbase' settings.gradle.kts || die "Not an actionbase project (sett
 # ── 3. parse args ────────────────────────────────────────────────────
 
 LANG_CODE=""
+PLATFORM="claude"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --lang) LANG_CODE="$2"; shift 2 ;;
+    --platform) PLATFORM="$2"; shift 2 ;;
     *)      die "Unknown option: $1" ;;
   esac
 done
+
+case "$PLATFORM" in
+  claude|codex|both) ;;
+  *) die "Invalid platform: $PLATFORM (valid: claude, codex, both)" ;;
+esac
 
 # ── 4. download tarball ──────────────────────────────────────────────
 
@@ -59,12 +72,14 @@ SHARED_DIR="$EXTRACT_DIR/shared"
 
 # ── 5. language selection (from available packs in tarball) ──────────
 
-# detect language packs: directories containing CLAUDE.md, excluding shared/
+# detect language packs: directories containing CLAUDE.md or AGENTS.md, excluding shared/
 AVAILABLE_LANGS=()
 for d in "$EXTRACT_DIR"/*/; do
   name="$(basename "$d")"
   [[ "$name" == "shared" ]] && continue
-  [[ -f "$d/CLAUDE.md" ]] && AVAILABLE_LANGS+=("$name")
+  if [[ -f "$d/CLAUDE.md" ]] || [[ -f "$d/AGENTS.md" ]]; then
+    AVAILABLE_LANGS+=("$name")
+  fi
 done
 [[ ${#AVAILABLE_LANGS[@]} -gt 0 ]] || die "No language packs found in archive."
 
@@ -112,81 +127,128 @@ fi
 LANG_DIR="$EXTRACT_DIR/$LANG_CODE"
 [[ -d "$LANG_DIR" ]] || die "Language pack not found: $LANG_CODE"
 
-# ── 5. install files ─────────────────────────────────────────────────
+# ── 5. install functions ─────────────────────────────────────────────
 
-if [[ -f CLAUDE.md && -d .claude ]]; then
-  MODE="update"
-else
-  MODE="install"
-fi
+install_claude() {
+  info "[claude] Installing Claude Code config..."
+
+  # CLAUDE.md (from language pack)
+  if [[ -f "$LANG_DIR/CLAUDE.md" ]]; then
+    cp "$LANG_DIR/CLAUDE.md" ./CLAUDE.md
+    info "  CLAUDE.md"
+  fi
+
+  # .claude/ directory
+  mkdir -p .claude
+
+  # language-specific directories — rm then copy
+  for sub in $LANG_DIRS; do
+    if [[ -d "$LANG_DIR/.claude/$sub" ]]; then
+      rm -rf ".claude/$sub"
+      cp -R "$LANG_DIR/.claude/$sub" ".claude/$sub"
+      count="$(find ".claude/$sub" -type f | wc -l | tr -d ' ')"
+      info "  .claude/$sub/ ($count files)"
+    fi
+  done
+
+  # shared: settings.json — overwrite
+  if [[ -f "$SHARED_DIR/.claude/settings.json" ]]; then
+    cp "$SHARED_DIR/.claude/settings.json" .claude/settings.json
+    info "  .claude/settings.json"
+  fi
+
+  # shared: codemaps/ — rm then copy
+  if [[ -d "$SHARED_DIR/.claude/codemaps" ]]; then
+    rm -rf ".claude/codemaps"
+    cp -R "$SHARED_DIR/.claude/codemaps" ".claude/codemaps"
+    count="$(find ".claude/codemaps" -type f | wc -l | tr -d ' ')"
+    info "  .claude/codemaps/ ($count files)"
+  fi
+
+  # shared: hooks/ — rm then copy
+  if [[ -d "$SHARED_DIR/.claude/hooks" ]]; then
+    rm -rf ".claude/hooks"
+    cp -R "$SHARED_DIR/.claude/hooks" ".claude/hooks"
+    info "  .claude/hooks/"
+  fi
+
+  # shared: setup.sh — overwrite
+  if [[ -f "$SHARED_DIR/.claude/setup.sh" ]]; then
+    cp "$SHARED_DIR/.claude/setup.sh" .claude/setup.sh
+    chmod +x .claude/setup.sh
+    info "  .claude/setup.sh"
+  fi
+
+  # settings.local.json — preserve or create
+  if [[ -f .claude/settings.local.json ]]; then
+    info "  .claude/settings.local.json (kept)"
+  else
+    echo '{}' > .claude/settings.local.json
+    info "  .claude/settings.local.json (created)"
+  fi
+}
+
+install_codex() {
+  info "[codex] Installing Codex config..."
+
+  # AGENTS.md (from language pack)
+  if [[ -f "$LANG_DIR/AGENTS.md" ]]; then
+    cp "$LANG_DIR/AGENTS.md" ./AGENTS.md
+    info "  AGENTS.md"
+  fi
+
+  # .codex/ directory — shared config
+  mkdir -p .codex
+  if [[ -f "$SHARED_DIR/.codex/config.toml" ]]; then
+    cp "$SHARED_DIR/.codex/config.toml" .codex/config.toml
+    info "  .codex/config.toml"
+  fi
+
+  # .codex/agents/ — shared agent definitions
+  if [[ -d "$SHARED_DIR/.codex/agents" ]]; then
+    rm -rf ".codex/agents"
+    cp -R "$SHARED_DIR/.codex/agents" ".codex/agents"
+    count="$(find ".codex/agents" -type f | wc -l | tr -d ' ')"
+    info "  .codex/agents/ ($count files)"
+  fi
+
+  # .agents/skills/ — from language pack (dereference symlinks)
+  if [[ -d "$LANG_DIR/.agents/skills" ]]; then
+    rm -rf ".agents/skills"
+    mkdir -p .agents
+    cp -RL "$LANG_DIR/.agents/skills" ".agents/skills"
+    count="$(find ".agents/skills" -name SKILL.md | wc -l | tr -d ' ')"
+    info "  .agents/skills/ ($count skills)"
+  fi
+}
+
+# ── 6. run installation ─────────────────────────────────────────────
 
 echo ""
-LABEL="Installing"
-[[ "$MODE" == "update" ]] && LABEL="Updating"
-echo "$LABEL actionbase-agents (lang=$LANG_CODE)..."
+echo "Installing actionbase-agents (lang=$LANG_CODE, platform=$PLATFORM)..."
 
-# CLAUDE.md (from language pack)
-cp "$LANG_DIR/CLAUDE.md" ./CLAUDE.md
-info "CLAUDE.md"
-
-# .claude/ directory
-mkdir -p .claude
-
-# language-specific directories — rm then copy
-for sub in $LANG_DIRS; do
-  if [[ -d "$LANG_DIR/.claude/$sub" ]]; then
-    rm -rf ".claude/$sub"
-    cp -R "$LANG_DIR/.claude/$sub" ".claude/$sub"
-    count="$(find ".claude/$sub" -type f | wc -l | tr -d ' ')"
-    info ".claude/$sub/ ($count files)"
-  fi
-done
-
-# shared: settings.json — overwrite
-cp "$SHARED_DIR/.claude/settings.json" .claude/settings.json
-info ".claude/settings.json"
-
-# shared: codemaps/ — rm then copy
-if [[ -d "$SHARED_DIR/.claude/codemaps" ]]; then
-  rm -rf ".claude/codemaps"
-  cp -R "$SHARED_DIR/.claude/codemaps" ".claude/codemaps"
-  count="$(find ".claude/codemaps" -type f | wc -l | tr -d ' ')"
-  info ".claude/codemaps/ ($count files)"
-fi
-
-# shared: hooks/ — rm then copy
-if [[ -d "$SHARED_DIR/.claude/hooks" ]]; then
-  rm -rf ".claude/hooks"
-  cp -R "$SHARED_DIR/.claude/hooks" ".claude/hooks"
-  info ".claude/hooks/"
-fi
-
-# shared: setup.sh — overwrite
-if [[ -f "$SHARED_DIR/.claude/setup.sh" ]]; then
-  cp "$SHARED_DIR/.claude/setup.sh" .claude/setup.sh
-  chmod +x .claude/setup.sh
-  info ".claude/setup.sh"
-fi
-
-# ── 6. settings.local.json — preserve or create ──────────────────────
-
-if [[ -f .claude/settings.local.json ]]; then
-  info ".claude/settings.local.json (kept)"
-else
-  echo '{}' > .claude/settings.local.json
-  info ".claude/settings.local.json (created)"
-fi
+case "$PLATFORM" in
+  claude)
+    install_claude
+    ;;
+  codex)
+    install_codex
+    ;;
+  both)
+    install_claude
+    echo ""
+    install_codex
+    ;;
+esac
 
 # ── 7. summary ────────────────────────────────────────────────────────
 
 echo ""
-DONE_LABEL="installed"
-[[ "$MODE" == "update" ]] && DONE_LABEL="updated"
-echo "Done! actionbase-agents $DONE_LABEL (lang=$LANG_CODE)."
+echo "Done! actionbase-agents installed (lang=$LANG_CODE, platform=$PLATFORM)."
 
-# ── 8. run setup ─────────────────────────────────────────────────────
+# ── 8. run setup (Claude only) ───────────────────────────────────────
 
-if [[ -f .claude/setup.sh ]]; then
+if [[ "$PLATFORM" != "codex" ]] && [[ -f .claude/setup.sh ]]; then
   echo ""
   bash .claude/setup.sh
   echo ""

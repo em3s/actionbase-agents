@@ -27,6 +27,12 @@ Examples:
 - Not empty
 - Contains at least one `##` heading
 
+### 2b. AGENTS.md (Codex)
+- If `<lang>/AGENTS.md` exists:
+  - Not empty
+  - Under 32KB (Codex limit)
+  - Contains at least one `##` heading
+
 ### 3. Commands
 - Every `.md` file in `commands/` has YAML frontmatter with `description` field
 - `description` is non-empty
@@ -47,7 +53,17 @@ Examples:
 - `shared/.claude/settings.json` exists and is valid JSON
 - `shared/.claude/hooks/guard-repo.sh` exists and is executable
 
-### 8. install.sh consistency
+### 7b. Shared Codex config
+- If `shared/.codex/config.toml` exists, it is valid TOML
+- Each `.toml` file in `shared/.codex/agents/` is valid TOML
+
+### 8. Codex skills (if present)
+- If `<lang>/.agents/skills/` exists:
+  - Each subdirectory contains `SKILL.md`
+  - Each `SKILL.md` has YAML frontmatter with `name` and `description` fields
+  - Skill count matches expected (15: 5 domain + 9 workflow + 1 codemaps)
+
+### 9. install.sh consistency
 - Language code appears in `install.sh` case statement
 - `LANG_DIRS` variable in `install.sh` matches actual subdirectory names used across language packs
 

@@ -20,15 +20,17 @@ Examples:
 ## Process
 
 1. **Validate** — check `<lang-code>` doesn't already exist as a directory
-2. **Clone structure** — copy directory tree from source language pack
-3. **Create placeholder files** — for each file in source:
+2. **Clone Claude structure** — copy `.claude/` directory tree from source language pack
+3. **Clone Codex structure** — copy `.agents/skills/`, `.codex/`, and `AGENTS.md` from source language pack
+4. **Create placeholder files** — for each file in source:
    - Copy the file as-is (to be translated later)
    - Prepend a comment `<!-- TODO: translate from <source-lang> -->` to each `.md` file
-4. **Create CLAUDE.md** — copy source `CLAUDE.md` with translation TODO marker
-5. **Update install.sh** — add the new language to the `case` validation statement
-6. **Update CLAUDE.md** — add the new language to the "Available Languages" table with status "In Progress"
-7. **Update README.md** — add to language table if README exists
-8. **Report** — list all created files
+5. **Create CLAUDE.md** — copy source `CLAUDE.md` with translation TODO marker
+6. **Create AGENTS.md** — copy source `AGENTS.md` with translation TODO marker
+7. **Update install.sh** — add the new language to the `case` validation statement
+8. **Update CLAUDE.md** — add the new language to the "Available Languages" table with status "In Progress"
+9. **Update README.md** — add to language table if README exists
+10. **Report** — list all created files
 
 ## Report format
 

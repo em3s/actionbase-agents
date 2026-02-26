@@ -8,7 +8,7 @@ Check structural consistency across language packs.
 
 ## Scope
 
-Language directories at project root (`ko/`, `en/`, etc.) containing `.claude/` config files.
+Language directories at project root (`ko/`, `en/`, etc.) containing `.claude/` or `.agents/` config files.
 
 ## Checks
 
@@ -33,12 +33,19 @@ Language directories at project root (`ko/`, `en/`, etc.) containing `.claude/` 
 - Verify command names (filenames) have 1:1 correspondence
 
 ### 4. Skills structure comparison
-- Verify `skills/` subdirectory names have 1:1 correspondence
+- Verify `.claude/skills/` subdirectory names have 1:1 correspondence
 - Verify each skill contains `SKILL.md`
+
+### 5. Codex structure comparison
+- If any language has `.agents/skills/`, compare across packs:
+  - Verify `.agents/skills/` subdirectory names have 1:1 correspondence
+  - Verify each skill contains `SKILL.md`
+- Compare AGENTS.md existence across packs
+- Compare `.codex/config.toml` existence across packs
 
 ## Process
 
-1. Detect language directories at project root (directories containing `CLAUDE.md`)
+1. Detect language directories at project root (directories containing `CLAUDE.md` or `AGENTS.md`)
 2. If only 1 language — report "No comparison target, skipping" and stop
 3. If 2+ languages — run all checks across every pair
 4. Report results
