@@ -11,7 +11,7 @@ set -euo pipefail
 #   bash <(curl -fsSL ...) --lang ko
 
 REPO="em3s/actionbase-agents"
-TARBALL_URL="https://github.com/$REPO/archive/refs/heads/main.tar.gz"
+TARBALL_URL="https://api.github.com/repos/$REPO/tarball/main"
 LANG_DIRS="agents codemaps commands rules skills"
 
 TMP=""
