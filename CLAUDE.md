@@ -95,6 +95,20 @@ Slash commands for managing this repo (defined in `.claude/commands/`):
 | `/release [version]` | Pre-release checklist: validate, sync-check, and tag |
 | `/update-codemaps` | Generate or update architecture codemaps in `shared/.claude/codemaps/` |
 
+## Runtime Modes
+
+Determined by `allowed_repo` vs `upstream_repo` in `.claude/settings.local.json` (configured by `setup.sh`):
+
+| Mode | Condition | Conversation | Artifacts (commits, PRs, issues) | Code & comments |
+|------|-----------|-------------|----------------------------------|-----------------|
+| **Fork** | `allowed_repo ≠ upstream_repo` | Language pack language | Language pack language | Always English |
+| **Upstream** | `allowed_repo == upstream_repo` | Language pack language | Always English | Always English |
+
+- **Fork mode**: Working on a personal fork. Fork-local artifacts follow the language pack; upstream-targeted artifacts (`/patch-upstream`) are always English.
+- **Upstream mode**: Working directly on the upstream repo. All artifacts are in English regardless of language pack.
+
+Each language pack's `CLAUDE.md` must include these rules under a `### Language` / `### 언어` section.
+
 ## Available Languages
 
 | Code | Status |
