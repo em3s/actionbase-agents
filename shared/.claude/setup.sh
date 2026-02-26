@@ -68,6 +68,15 @@ prompt() {
   echo "${input:-$default}"
 }
 
+# confirm yes/no (default: Y)
+confirm() {
+  local label="$1"
+  printf "  %s [Y/n]: " "$label" > /dev/tty
+  local input
+  read -r input < /dev/tty
+  [[ -z "$input" || "$input" =~ ^[Yy] ]]
+}
+
 # ── parse args ───────────────────────────────────────────────────────
 
 ARG_REPO=""
@@ -114,12 +123,66 @@ fi
 write_config "allowed_repo" "$REPO"
 info "allowed_repo = $REPO"
 
-# 3. show mode
+# 3. configure git remotes
 echo ""
 if [[ "$REPO" == "$UPSTREAM" ]]; then
   info "Mode: upstream (all artifacts in English)"
 else
   info "Mode: fork (conversation + fork artifacts in language pack language)"
+fi
+
+echo ""
+info "Git remotes will be configured as follows:"
+if [[ "$REPO" == "$UPSTREAM" ]]; then
+  info "  origin   → $UPSTREAM (fetch/push)"
+  git remote get-url upstream &>/dev/null && info "  upstream → (will be removed)"
+else
+  info "  origin   → $REPO (fetch/push)"
+  info "  upstream → $UPSTREAM (fetch only, push disabled)"
+fi
+command -v gh &>/dev/null && info "  gh default → $REPO"
+echo ""
+
+if [[ -t 0 ]] && ! confirm "Apply git remote configuration?"; then
+  info "Skipped git remote configuration."
+else
+  if [[ "$REPO" == "$UPSTREAM" ]]; then
+    # origin should point to upstream
+    CURRENT_ORIGIN="$(detect_repo || true)"
+    if [[ -n "$CURRENT_ORIGIN" && "$CURRENT_ORIGIN" != "$UPSTREAM" ]]; then
+      git remote set-url origin "https://github.com/$UPSTREAM.git"
+      info "origin → $UPSTREAM"
+    fi
+
+    # remove upstream remote if it exists (not needed in upstream mode)
+    if git remote get-url upstream &>/dev/null; then
+      git remote remove upstream
+      info "Removed upstream remote"
+    fi
+
+  else
+    # origin should point to fork
+    CURRENT_ORIGIN="$(detect_repo || true)"
+    if [[ -n "$CURRENT_ORIGIN" && "$CURRENT_ORIGIN" != "$REPO" ]]; then
+      git remote set-url origin "https://github.com/$REPO.git"
+      info "origin → $REPO"
+    fi
+
+    # add/update upstream remote (fetch only, no push)
+    if git remote get-url upstream &>/dev/null; then
+      git remote set-url upstream "https://github.com/$UPSTREAM.git"
+    else
+      git remote add upstream "https://github.com/$UPSTREAM.git"
+    fi
+    git remote set-url --push upstream no_push
+    info "upstream → $UPSTREAM (fetch only, push disabled)"
+  fi
+
+  # set gh default repo
+  if command -v gh &>/dev/null; then
+    gh repo set-default "$REPO" 2>/dev/null || true
+    info "gh default → $REPO"
+  fi
 fi
 
 # ── done ─────────────────────────────────────────────────────────────
