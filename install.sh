@@ -93,8 +93,14 @@ SHARED_DIR="$EXTRACT_DIR/shared"
 
 # ── 5. install files ─────────────────────────────────────────────────
 
+if [[ -f CLAUDE.md && -d .claude ]]; then
+  MODE="update"
+else
+  MODE="install"
+fi
+
 echo ""
-echo "Installing actionbase-agents (lang=$LANG_CODE)..."
+echo "${MODE^}ing actionbase-agents (lang=$LANG_CODE)..."
 
 # CLAUDE.md (from language pack)
 cp "$LANG_DIR/CLAUDE.md" ./CLAUDE.md
@@ -144,4 +150,4 @@ fi
 # ── 7. summary ────────────────────────────────────────────────────────
 
 echo ""
-echo "Done! actionbase-agents installed (lang=$LANG_CODE)."
+echo "Done! actionbase-agents ${MODE}ed (lang=$LANG_CODE)."
