@@ -1,20 +1,20 @@
-# Server 모듈
+# Server Module
 
-## 목적
+## Purpose
 
-Spring WebFlux를 사용하는 REST API. HTTP 요청 처리, 유효성 검사, 응답 포맷팅을 담당한다.
+REST API using Spring WebFlux. Handles HTTP requests, validation, and response formatting.
 
-## 패키지 구조
+## Package Structure
 
 ```
 server/src/main/kotlin/.../
-├── Application.kt            # 메인 진입점
+├── Application.kt            # Main entry point
 ├── controller/
 │   ├── MutationController.kt # POST /api/v1/mutation
 │   ├── QueryController.kt    # GET /api/v1/query
-│   └── SchemaController.kt   # Schema 관리
+│   └── SchemaController.kt   # Schema management
 ├── service/
-│   ├── MutationService.kt    # 비즈니스 로직
+│   ├── MutationService.kt    # Business logic
 │   └── QueryService.kt
 ├── dto/
 │   ├── MutationRequest.kt
@@ -28,16 +28,16 @@ server/src/main/kotlin/.../
     └── GlobalExceptionHandler.kt
 ```
 
-## API 엔드포인트
+## API Endpoints
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| POST | `/api/v1/mutation` | 인터랙션 생성/삭제 |
-| GET | `/api/v1/query` | 인터랙션 조회 |
-| GET | `/api/v1/schemas` | Schema 목록 조회 |
-| GET | `/api/v1/schemas/{name}` | Schema 상세 조회 |
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/mutation` | Create/delete interaction |
+| GET | `/api/v1/query` | Query interactions |
+| GET | `/api/v1/schemas` | List schemas |
+| GET | `/api/v1/schemas/{name}` | Get schema details |
 
-## Controller 패턴
+## Controller Pattern
 
 ```kotlin
 @RestController
@@ -54,14 +54,14 @@ class MutationController(
 }
 ```
 
-## Reactive 규칙
+## Reactive Rules
 
-- 모든 엔드포인트는 `Mono<T>` 또는 `Flux<T>`를 반환해야 한다
-- Controller/Service 레이어에서 절대 블로킹하지 말 것
-- Engine의 블로킹 호출에는 `subscribeOn(boundedElastic())`을 사용할 것
+- All endpoints must return `Mono<T>` or `Flux<T>`
+- Never block in Controller/Service layers
+- Use `subscribeOn(boundedElastic())` for Engine blocking calls
 
-## 의존성
+## Dependencies
 
-- core (모델)
+- core (models)
 - engine (Storage/Messaging)
 - Spring WebFlux

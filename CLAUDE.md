@@ -25,7 +25,6 @@ ko/                         # Korean language pack
   CLAUDE.md                 #   Agent instructions
   .claude/
     agents/                 #   Sub-agent profiles (6)
-    codemaps/               #   Architecture docs per module (5)
     commands/               #   Slash commands: /plan, /implement, /code-review, etc. (10)
     rules/                  #   Coding style, git workflow, security, performance (6)
     skills/                 #   Domain knowledge: concepts, testing, v3 transition (5)
@@ -33,13 +32,17 @@ ko/                         # Korean language pack
 en/                         # English language pack (planned)
   CLAUDE.md
   .claude/
-    agents/  codemaps/  commands/  rules/  skills/
+    agents/  commands/  rules/  skills/
 
 shared/                     # Language-agnostic config
   .claude/
     settings.json           #   Tool permissions, pre/post hooks, advisories
     hooks/
       guard-repo.sh         #   Repository scope enforcement (em3s/actionbase only)
+    codemaps/               #   Architecture docs per module, English only (5)
+
+.claude/
+  commands/                 # Admin slash commands (5)
 
 install.sh                  # curl one-liner installer with language selection
 ```
@@ -75,8 +78,20 @@ When modifying agent config in one language pack:
 | `ko/.claude/commands/*.md` | Slash commands defining agent workflows. |
 | `ko/.claude/rules/*.md` | Coding conventions, git workflow, security policies. |
 | `ko/.claude/skills/*/SKILL.md` | Domain knowledge modules the agent can reference. |
-| `ko/.claude/codemaps/*.md` | Architecture documentation per Actionbase module. |
+| `shared/.claude/codemaps/*.md` | Architecture documentation per Actionbase module (English only). |
 | `ko/.claude/agents/*.md` | Sub-agent profiles (architect, code-reviewer, planner, etc.). |
+
+## Admin Commands
+
+Slash commands for managing this repo (defined in `.claude/commands/`):
+
+| Command | Purpose |
+|---------|---------|
+| `/sync-check` | Check structural consistency across language packs |
+| `/validate [lang]` | Validate language pack structure and file formats |
+| `/add-language <lang>` | Scaffold a new language pack from an existing one |
+| `/release [version]` | Pre-release checklist: validate, sync-check, and tag |
+| `/update-codemaps` | Generate or update architecture codemaps in `shared/.claude/codemaps/` |
 
 ## Available Languages
 

@@ -13,7 +13,7 @@ set -euo pipefail
 REPO="em3s/actionbase-agents"
 BRANCH="main"
 TARBALL_URL="https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz"
-LANG_DIRS="agents codemaps commands rules skills"
+LANG_DIRS="agents commands rules skills"
 
 TMP=""
 trap 'rm -rf "$TMP"' EXIT
@@ -116,6 +116,14 @@ done
 # shared: settings.json — overwrite
 cp "$SHARED_DIR/.claude/settings.json" .claude/settings.json
 info ".claude/settings.json"
+
+# shared: codemaps/ — rm then copy
+if [[ -d "$SHARED_DIR/.claude/codemaps" ]]; then
+  rm -rf ".claude/codemaps"
+  cp -R "$SHARED_DIR/.claude/codemaps" ".claude/codemaps"
+  count="$(find ".claude/codemaps" -type f | wc -l | tr -d ' ')"
+  info ".claude/codemaps/ ($count files)"
+fi
 
 # shared: hooks/ — rm then copy
 if [[ -d "$SHARED_DIR/.claude/hooks" ]]; then
