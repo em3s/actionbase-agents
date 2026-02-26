@@ -29,10 +29,13 @@ ko/                         # Korean language pack
     rules/                  #   Coding style, git workflow, security, performance, language (7)
     skills/                 #   Domain knowledge: concepts, testing, v3 transition (5)
 
-en/                         # English language pack (planned)
-  CLAUDE.md
+en/                         # English language pack
+  CLAUDE.md                 #   Agent instructions
   .claude/
-    agents/  commands/  rules/  skills/
+    agents/                 #   Sub-agent profiles (6)
+    commands/               #   Slash commands: /plan, /implement, /code-review, etc. (9)
+    rules/                  #   Coding style, git workflow, security, performance, language (7)
+    skills/                 #   Domain knowledge: concepts, testing, v3 transition (5)
 
 shared/                     # Language-agnostic config
   .claude/
@@ -82,6 +85,11 @@ When modifying agent config in one language pack:
 | `ko/.claude/skills/*/SKILL.md` | Domain knowledge modules the agent can reference. |
 | `shared/.claude/codemaps/*.md` | Architecture documentation per Actionbase module (English only). |
 | `ko/.claude/agents/*.md` | Sub-agent profiles (architect, code-reviewer, planner, etc.). |
+| `en/CLAUDE.md` | English agent instructions for Actionbase development. |
+| `en/.claude/commands/*.md` | Slash commands defining agent workflows (English). |
+| `en/.claude/rules/*.md` | Coding conventions, git workflow, security policies (English). |
+| `en/.claude/skills/*/SKILL.md` | Domain knowledge modules (English). |
+| `en/.claude/agents/*.md` | Sub-agent profiles (English). |
 
 ## Admin Commands
 
@@ -114,7 +122,7 @@ Each language pack's `CLAUDE.md` must include these rules under a `### Language`
 | Code | Status |
 |------|--------|
 | `ko` | Available |
-| `en` | Planned |
+| `en` | Available |
 
 ## License
 
