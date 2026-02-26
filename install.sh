@@ -36,15 +36,15 @@ grep -q 'actionbase' settings.gradle.kts || die "Not an actionbase project (sett
 # ── 3. language selection ─────────────────────────────────────────────
 
 select_language() {
-  exec 3</dev/tty 2>/dev/null || die "Cannot open terminal. Use --lang ko or --lang en."
+  exec 3<>/dev/tty 2>/dev/null || die "Cannot open terminal. Use --lang ko or --lang en."
 
-  printf "\n"
-  printf "  Select language / 언어를 선택하세요:\n"
-  printf "\n"
-  printf "    1) 한국어 (Korean)\n"
-  printf "    2) English\n"
-  printf "\n"
-  printf "  > "
+  printf "\n"           >&3
+  printf "  Select language / 언어를 선택하세요:\n" >&3
+  printf "\n"           >&3
+  printf "    1) 한국어 (Korean)\n" >&3
+  printf "    2) English\n" >&3
+  printf "\n"           >&3
+  printf "  > "         >&3
 
   local choice
   read -r choice <&3
