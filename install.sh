@@ -159,10 +159,11 @@ fi
 echo ""
 echo "Done! actionbase-agents ${MODE}ed (lang=$LANG_CODE)."
 
-# ── 8. run setup on first install ────────────────────────────────────
+# ── 8. run setup ─────────────────────────────────────────────────────
 
-if [[ "$MODE" == "install" && -f .claude/setup.sh ]]; then
+if [[ -f .claude/setup.sh ]]; then
   echo ""
-  echo "Running initial setup..."
   bash .claude/setup.sh
+  echo ""
+  echo "To reconfigure later, run: bash .claude/setup.sh"
 fi
