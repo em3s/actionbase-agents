@@ -34,10 +34,10 @@ Ecosystem: `cli/`, `website/`, `docker/`, `bin/`, `dev/`, `guides/` 등 도구�
 ## .claude/ Structure
 
 - `agents/` — 위임용 서브에이전트 (planner, architect, code-reviewer, security-reviewer, e2e-runner, refactor-cleaner)
-- `commands/` — 슬래시 커맨드 (plan, implement, continue, stage-to-issue, code-review, pr-korean, patch-upstream, bedtime, update-codemaps)
-- `skills/` — 컨텍스트 스킬 (actionbase-concepts, v3-transition, strategic-compact, verification-loop)
-- `rules/` — 항상 적용되는 가이드라인 (보안, 코딩 스타일, 테스트, git 워크플로우, 성능)
-- `codemaps/` — 모듈별 코드맵 (architecture, core, engine, server, data)
+- `commands/` — 슬래시 커맨드 (plan, implement, continue, stage-to-issue, code-review, pr-korean, patch-upstream, bedtime, reset-worktree)
+- `skills/` — 컨텍스트 스킬 (actionbase-concepts, v3-transition, strategic-compact, verification-loop, testing-guide)
+- `rules/` — 항상 적용되는 가이드라인 (보안, 코딩 스타일, 테스트, git 워크플로우, 성능, 언어, 에이전트, 환경)
+- `codemaps/` — 모듈별 코드맵, `shared/.claude/codemaps/`에서 공유 (architecture, core, engine, server, data)
 
 ## Key Commands
 
