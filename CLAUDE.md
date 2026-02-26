@@ -37,8 +37,9 @@ en/                         # English language pack (planned)
 shared/                     # Language-agnostic config
   .claude/
     settings.json           #   Tool permissions, pre/post hooks, advisories
+    setup.sh                #   Interactive local setup (allowed repo, etc.)
     hooks/
-      guard-repo.sh         #   Repository scope enforcement (em3s/actionbase only)
+      guard-repo.sh         #   Repository scope enforcement (reads from settings.local.json)
     codemaps/               #   Architecture docs per module, English only (5)
 
 .claude/
@@ -73,7 +74,8 @@ When modifying agent config in one language pack:
 |------|---------|
 | `install.sh` | Public curl-based installer. Downloads tarball, selects language, copies files. |
 | `shared/.claude/settings.json` | Tool permissions and hook config — shared across all languages. |
-| `shared/.claude/hooks/guard-repo.sh` | Blocks writes outside `em3s/actionbase` scope. |
+| `shared/.claude/setup.sh` | Interactive setup script. Configures `allowed_repo` in `settings.local.json`. |
+| `shared/.claude/hooks/guard-repo.sh` | Blocks writes outside configured `allowed_repo`. |
 | `ko/CLAUDE.md` | Korean agent instructions for Actionbase development. |
 | `ko/.claude/commands/*.md` | Slash commands defining agent workflows. |
 | `ko/.claude/rules/*.md` | Coding conventions, git workflow, security policies. |

@@ -138,6 +138,13 @@ if [[ -d "$SHARED_DIR/.claude/hooks" ]]; then
   info ".claude/hooks/"
 fi
 
+# shared: setup.sh — overwrite
+if [[ -f "$SHARED_DIR/.claude/setup.sh" ]]; then
+  cp "$SHARED_DIR/.claude/setup.sh" .claude/setup.sh
+  chmod +x .claude/setup.sh
+  info ".claude/setup.sh"
+fi
+
 # ── 6. settings.local.json — preserve or create ──────────────────────
 
 if [[ -f .claude/settings.local.json ]]; then
@@ -151,3 +158,11 @@ fi
 
 echo ""
 echo "Done! actionbase-agents ${MODE}ed (lang=$LANG_CODE)."
+
+# ── 8. run setup on first install ────────────────────────────────────
+
+if [[ "$MODE" == "install" && -f .claude/setup.sh ]]; then
+  echo ""
+  echo "Running initial setup..."
+  bash .claude/setup.sh
+fi
