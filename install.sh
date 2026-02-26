@@ -11,7 +11,8 @@ set -euo pipefail
 #   bash <(curl -fsSL ...) --lang ko
 
 REPO="em3s/actionbase-agents"
-TARBALL_URL="https://api.github.com/repos/$REPO/tarball/main"
+BRANCH="main"
+TARBALL_URL="https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz"
 LANG_DIRS="agents codemaps commands rules skills"
 
 TMP=""
@@ -77,11 +78,10 @@ esac
 
 TMP="$(mktemp -d)"
 echo ""
-echo "Downloading $REPO (main)..."
+echo "Downloading $REPO ($BRANCH)..."
 curl -fsSL "$TARBALL_URL" -o "$TMP/archive.tar.gz"
 tar xzf "$TMP/archive.tar.gz" -C "$TMP"
 
-# tarball extracts to a directory like em3s-actionbase-agents-<sha>/
 EXTRACT_DIR="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d | head -1)"
 [[ -d "$EXTRACT_DIR" ]] || die "Failed to extract tarball."
 
@@ -91,13 +91,10 @@ SHARED_DIR="$EXTRACT_DIR/shared"
 [[ -d "$LANG_DIR" ]]   || die "Language pack not found: $LANG_CODE"
 [[ -d "$SHARED_DIR" ]] || die "Shared config not found."
 
-# commit SHA from directory name (short)
-COMMIT_SHA="$(basename "$EXTRACT_DIR" | grep -oE '[0-9a-f]{7,}$' | cut -c1-7 || echo 'unknown')"
-
 # ── 5. install files ─────────────────────────────────────────────────
 
 echo ""
-echo "Installing actionbase-agents ($COMMIT_SHA, lang=$LANG_CODE)..."
+echo "Installing actionbase-agents (lang=$LANG_CODE)..."
 
 # CLAUDE.md (from language pack)
 cp "$LANG_DIR/CLAUDE.md" ./CLAUDE.md
@@ -139,4 +136,4 @@ fi
 # ── 7. summary ────────────────────────────────────────────────────────
 
 echo ""
-echo "Done! actionbase-agents installed (commit $COMMIT_SHA, lang=$LANG_CODE)."
+echo "Done! actionbase-agents installed (lang=$LANG_CODE)."
