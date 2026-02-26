@@ -1,74 +1,86 @@
 #!/bin/bash
-# Guard: restrict gh write commands, git push, and language violations.
-# Reads allowed_repo and upstream_repo from .claude/settings.local.json.
-# If not configured, allows all (no guard).
+# Guard: restrict writes and enforce language policy.
+# Detects fork mode automatically from git remote origin.
+# Fork = origin matches */actionbase but is NOT kakao/actionbase.
 
 cmd="$CLAUDE_BASH_COMMAND"
-CONFIG=".claude/settings.local.json"
 
-# read config values
-ALLOWED_REPO=""
-UPSTREAM_REPO=""
-if [ -f "$CONFIG" ]; then
-  eval "$(python3 - "$CONFIG" <<'PYEOF'
-import json, sys
-with open(sys.argv[1]) as f:
-    d = json.load(f)
-import shlex
-print(f"ALLOWED_REPO={shlex.quote(d.get('allowed_repo', ''))}")
-print(f"UPSTREAM_REPO={shlex.quote(d.get('upstream_repo', ''))}")
-PYEOF
-)" 2>/dev/null || true
+# ── detect origin repo ─────────────────────────────────────────────
+
+ORIGIN_REPO=""
+ORIGIN_URL="$(git remote get-url origin 2>/dev/null)" || true
+if [ -n "$ORIGIN_URL" ]; then
+  ORIGIN_REPO="$(echo "$ORIGIN_URL" | sed -E 's#^.*(github\.com[:/])##; s#\.git$##')"
 fi
 
-# if not configured, skip guard
-[ -z "$ALLOWED_REPO" ] && exit 0
+# no origin detected — skip guard
+[ -z "$ORIGIN_REPO" ] && exit 0
 
-# determine mode
-IS_UPSTREAM=false
-[ -n "$UPSTREAM_REPO" ] && [ "$ALLOWED_REPO" = "$UPSTREAM_REPO" ] && IS_UPSTREAM=true
+# ── determine mode ─────────────────────────────────────────────────
+# Fork mode: origin is an actionbase fork (not kakao's)
 
-# gh write commands
+IS_FORK=false
+if echo "$ORIGIN_REPO" | grep -q '/actionbase$' && \
+   ! echo "$ORIGIN_REPO" | grep -q '^kakao/actionbase$'; then
+  IS_FORK=true
+fi
+
+# ── gh write commands ──────────────────────────────────────────────
+
 if echo "$cmd" | grep -qE 'gh\s+(issue|pr)\s+(create|edit|close|reopen|comment|merge|review)'; then
-  if echo "$cmd" | grep -qE '(-R|--repo)'; then
-    # explicit -R: must match allowed_repo
-    if ! echo "$cmd" | grep -qE "(-R|--repo)\s+$ALLOWED_REPO"; then
-      echo "BLOCK: Changes are only allowed in $ALLOWED_REPO." >&2
-      exit 1
+  if $IS_FORK; then
+    # Fork mode: allow writes to own fork, confirm for others
+    if echo "$cmd" | grep -qE '(-R|--repo)'; then
+      if ! echo "$cmd" | grep -qE "(-R|--repo)\s+$ORIGIN_REPO"; then
+        echo "CONFIRM: Fork mode — this targets a repo other than your fork ($ORIGIN_REPO)." >&2
+        echo "         Approve to proceed, or rewrite with -R $ORIGIN_REPO." >&2
+        exit 2
+      fi
+    else
+      DEFAULT_REPO="$(gh repo set-default --view 2>/dev/null || true)"
+      if [ -n "$DEFAULT_REPO" ] && ! echo "$DEFAULT_REPO" | grep -q "$ORIGIN_REPO"; then
+        echo "CONFIRM: Fork mode — gh default repo is '$DEFAULT_REPO', not '$ORIGIN_REPO'." >&2
+        echo "         Approve to proceed, or run: gh repo set-default $ORIGIN_REPO" >&2
+        exit 2
+      fi
     fi
   else
-    # no -R: check gh default repo
-    DEFAULT_REPO="$(gh repo set-default --view 2>/dev/null || true)"
-    if [ -n "$DEFAULT_REPO" ] && ! echo "$DEFAULT_REPO" | grep -q "$ALLOWED_REPO"; then
-      echo "BLOCK: gh default repo is '$DEFAULT_REPO', not '$ALLOWED_REPO'. Use -R $ALLOWED_REPO or run: gh repo set-default $ALLOWED_REPO" >&2
-      exit 1
-    fi
+    # Non-fork mode: ALL gh write commands require confirmation
+    echo "CONFIRM: Non-fork mode — all write operations require approval." >&2
+    exit 2
   fi
 fi
 
-# git push: only origin allowed
+# ── git push ───────────────────────────────────────────────────────
+
 if echo "$cmd" | grep -qE 'git\s+push'; then
-  for r in $(git remote 2>/dev/null | grep -v '^origin$'); do
-    if echo "$cmd" | grep -qw "$r"; then
-      echo "BLOCK: Push is only allowed to origin ($ALLOWED_REPO). Cannot use remote '$r'." >&2
-      exit 1
-    fi
-  done
+  if $IS_FORK; then
+    # Fork mode: allow push to origin, confirm for other remotes
+    for r in $(git remote 2>/dev/null | grep -v '^origin$'); do
+      if echo "$cmd" | grep -qw "$r"; then
+        echo "CONFIRM: Fork mode — pushing to '$r' (not origin). Approve to proceed." >&2
+        exit 2
+      fi
+    done
+  else
+    # Non-fork mode: ALL pushes require confirmation
+    echo "CONFIRM: Non-fork mode — all push operations require approval." >&2
+    exit 2
+  fi
 fi
 
-# ── language guard (upstream mode only) ─────────────────────────────
-# In upstream mode, block non-English content in artifacts.
-# Uses Python unicodedata to detect non-Latin scripts (CJK, Hangul, Cyrillic, etc.)
-# In Claude Code, the user sees a permission prompt and can approve to override.
+# ── language guard (non-fork mode only) ────────────────────────────
+# Non-fork mode: all artifacts must be in English.
+# Detects non-Latin scripts (CJK, Hangul, Cyrillic, etc.) via unicodedata.
 
-if $IS_UPSTREAM; then
+if ! $IS_FORK; then
   has_non_english() {
     python3 - "$1" <<'PYEOF'
 import sys, unicodedata
 text = sys.argv[1]
 for ch in text:
     cat = unicodedata.category(ch)
-    if cat.startswith('L'):  # Letter category
+    if cat.startswith('L'):
         name = unicodedata.name(ch, '')
         if name and not name.startswith('LATIN'):
             sys.exit(0)  # found non-Latin letter
@@ -81,8 +93,8 @@ PYEOF
   echo "$cmd" | grep -qE 'git\s+commit' && needs_check=true
 
   if $needs_check && has_non_english "$cmd"; then
-    echo "BLOCK: Upstream mode — all artifacts must be in English. Non-English text detected." >&2
-    echo "       Rewrite in English and retry, or approve to override." >&2
+    echo "CONFIRM: Non-fork mode — all artifacts must be in English. Non-English text detected." >&2
+    echo "         Rewrite in English and retry, or approve to override." >&2
     exit 2
   fi
 fi

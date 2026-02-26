@@ -4,12 +4,12 @@
 
 ## 모드 판별
 
-`.claude/settings.local.json`을 읽어 모드를 결정한다:
+`git remote get-url origin`으로 자동 감지한다:
 
-- `allowed_repo == upstream_repo` → **Upstream 모드**
-- `allowed_repo ≠ upstream_repo` → **Fork 모드**
+- origin이 `*/actionbase`이고 `kakao/actionbase`가 아님 → **Fork 모드**
+- 그 외 (kakao/actionbase, actionbase가 아닌 레포 등) → **Non-fork 모드**
 
-## Upstream 모드 (직접 작업)
+## Non-fork 모드
 
 | 출력 | 언어 | 예외 없음 |
 |------|------|----------|
@@ -41,6 +41,6 @@
 ## 자기 검증
 
 산출물을 출력하기 전에 반드시 확인:
-1. 현재 모드가 무엇인가? (settings.local.json 확인)
+1. 현재 모드가 무엇인가? (git remote origin 확인)
 2. 이 산출물은 대화인가, 아티팩트인가?
 3. 아티팩트라면 올바른 언어로 작성되었는가?

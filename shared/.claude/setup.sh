@@ -6,8 +6,7 @@ set -euo pipefail
 #
 # Usage:
 #   bash .claude/setup.sh
-#   bash .claude/setup.sh --repo kakao/actionbase
-#   bash .claude/setup.sh --repo em3s/actionbase --upstream kakao/actionbase
+#   bash .claude/setup.sh --upstream kakao/actionbase
 
 CONFIG=".claude/settings.local.json"
 DEFAULT_UPSTREAM="kakao/actionbase"
@@ -81,11 +80,9 @@ confirm() {
 
 # ── parse args ───────────────────────────────────────────────────────
 
-ARG_REPO=""
 ARG_UPSTREAM=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --repo)     ARG_REPO="$2"; shift 2 ;;
     --upstream) ARG_UPSTREAM="$2"; shift 2 ;;
     *)          die "Unknown option: $1" ;;
   esac
@@ -112,64 +109,40 @@ fi
 write_config "upstream_repo" "$UPSTREAM"
 info "upstream_repo = $UPSTREAM"
 
-# 2. allowed_repo
-CUR_ALLOWED="$(read_config allowed_repo || true)"
-if [[ -n "$ARG_REPO" ]]; then
-  REPO="$ARG_REPO"
-elif [[ -t 0 ]]; then
-  REPO="$(prompt "Allowed repo (your fork or upstream)" "${CUR_ALLOWED:-$DETECTED}")"
-else
-  REPO="${CUR_ALLOWED:-$DETECTED}"
+# 2. detect mode from origin
+echo ""
+[[ -n "$DETECTED" ]] || die "Could not detect repo from git remote origin."
+info "origin = $DETECTED"
+
+IS_FORK=false
+if echo "$DETECTED" | grep -q '/actionbase$' && \
+   ! echo "$DETECTED" | grep -q '^kakao/actionbase$'; then
+  IS_FORK=true
 fi
-[[ -n "$REPO" ]] || die "No repo specified and could not detect from origin."
-write_config "allowed_repo" "$REPO"
-info "allowed_repo = $REPO"
+
+if $IS_FORK; then
+  info "Mode: fork (origin writes free, others need approval)"
+else
+  info "Mode: non-fork (all writes need approval)"
+fi
 
 # 3. configure git remotes
 echo ""
-if [[ "$REPO" == "$UPSTREAM" ]]; then
-  info "Mode: upstream (all artifacts in English)"
-else
-  info "Mode: fork (conversation + fork artifacts in language pack language)"
-fi
-
-echo ""
 info "Git remotes will be configured as follows:"
-if [[ "$REPO" == "$UPSTREAM" ]]; then
-  info "  origin   → $UPSTREAM (fetch/push)"
-  git remote get-url upstream &>/dev/null && info "  upstream → (will be removed)"
-else
-  info "  origin   → $REPO (fetch/push)"
+if $IS_FORK; then
+  info "  origin   → $DETECTED (fetch/push)"
   info "  upstream → $UPSTREAM (fetch only, push disabled)"
+else
+  info "  origin   → $DETECTED (fetch/push)"
+  git remote get-url upstream &>/dev/null && info "  upstream → (will be removed)"
 fi
-command -v gh &>/dev/null && info "  gh default → $REPO"
+command -v gh &>/dev/null && info "  gh default → $DETECTED"
 echo ""
 
 if [[ -t 0 ]] && ! confirm "Apply git remote configuration?"; then
   info "Skipped git remote configuration."
 else
-  if [[ "$REPO" == "$UPSTREAM" ]]; then
-    # origin should point to upstream
-    CURRENT_ORIGIN="$(detect_repo || true)"
-    if [[ -n "$CURRENT_ORIGIN" && "$CURRENT_ORIGIN" != "$UPSTREAM" ]]; then
-      git remote set-url origin "https://github.com/$UPSTREAM.git"
-      info "origin → $UPSTREAM"
-    fi
-
-    # remove upstream remote if it exists (not needed in upstream mode)
-    if git remote get-url upstream &>/dev/null; then
-      git remote remove upstream
-      info "Removed upstream remote"
-    fi
-
-  else
-    # origin should point to fork
-    CURRENT_ORIGIN="$(detect_repo || true)"
-    if [[ -n "$CURRENT_ORIGIN" && "$CURRENT_ORIGIN" != "$REPO" ]]; then
-      git remote set-url origin "https://github.com/$REPO.git"
-      info "origin → $REPO"
-    fi
-
+  if $IS_FORK; then
     # add/update upstream remote (fetch only, no push)
     if git remote get-url upstream &>/dev/null; then
       git remote set-url upstream "https://github.com/$UPSTREAM.git"
@@ -178,12 +151,18 @@ else
     fi
     git remote set-url --push upstream no_push
     info "upstream → $UPSTREAM (fetch only, push disabled)"
+  else
+    # remove upstream remote if it exists (not needed in non-fork mode)
+    if git remote get-url upstream &>/dev/null; then
+      git remote remove upstream
+      info "Removed upstream remote"
+    fi
   fi
 
   # set gh default repo
   if command -v gh &>/dev/null; then
-    gh repo set-default "$REPO" 2>/dev/null || true
-    info "gh default → $REPO"
+    gh repo set-default "$DETECTED" 2>/dev/null || true
+    info "gh default → $DETECTED"
   fi
 fi
 

@@ -37,9 +37,9 @@ en/                         # English language pack (planned)
 shared/                     # Language-agnostic config
   .claude/
     settings.json           #   Tool permissions, pre/post hooks, advisories
-    setup.sh                #   Interactive local setup (allowed repo, etc.)
+    setup.sh                #   Interactive local setup (upstream repo, git remotes)
     hooks/
-      guard-repo.sh         #   Repository scope enforcement (reads from settings.local.json)
+      guard-repo.sh         #   Write guard + language enforcement (auto-detects fork mode)
     codemaps/               #   Architecture docs per module, English only (5)
 
 .claude/
@@ -74,8 +74,8 @@ When modifying agent config in one language pack:
 |------|---------|
 | `install.sh` | Public curl-based installer. Downloads tarball, selects language, copies files. |
 | `shared/.claude/settings.json` | Tool permissions and hook config — shared across all languages. |
-| `shared/.claude/setup.sh` | Interactive setup script. Configures `allowed_repo` in `settings.local.json`. |
-| `shared/.claude/hooks/guard-repo.sh` | Blocks writes outside configured `allowed_repo`. |
+| `shared/.claude/setup.sh` | Interactive setup script. Configures upstream repo and git remotes. |
+| `shared/.claude/hooks/guard-repo.sh` | Guards writes based on auto-detected fork mode (from git remote origin). |
 | `ko/CLAUDE.md` | Korean agent instructions for Actionbase development. |
 | `ko/.claude/commands/*.md` | Slash commands defining agent workflows. |
 | `ko/.claude/rules/*.md` | Coding conventions, git workflow, security policies. |
@@ -97,15 +97,15 @@ Slash commands for managing this repo (defined in `.claude/commands/`):
 
 ## Runtime Modes
 
-Determined by `allowed_repo` vs `upstream_repo` in `.claude/settings.local.json` (configured by `setup.sh`):
+Determined automatically from `git remote get-url origin`:
 
 | Mode | Condition | Conversation | Artifacts (commits, PRs, issues) | Code & comments |
 |------|-----------|-------------|----------------------------------|-----------------|
-| **Fork** | `allowed_repo ≠ upstream_repo` | Language pack language | Language pack language | Always English |
-| **Upstream** | `allowed_repo == upstream_repo` | Language pack language | Always English | Always English |
+| **Fork** | origin matches `*/actionbase` but not `kakao/actionbase` | Language pack language | Language pack language | Always English |
+| **Non-fork** | everything else (kakao/actionbase, non-actionbase repos) | Language pack language | Always English | Always English |
 
-- **Fork mode**: Working on a personal fork. Fork-local artifacts follow the language pack; upstream-targeted artifacts (`/patch-upstream`) are always English.
-- **Upstream mode**: Working directly on the upstream repo. All artifacts are in English regardless of language pack.
+- **Fork mode**: Working on a personal fork of actionbase. Origin writes are free; writes elsewhere require confirmation. Fork-local artifacts follow the language pack; upstream-targeted artifacts (`/patch-upstream`) are always English.
+- **Non-fork mode**: Working directly on upstream or a non-actionbase repo. All writes require confirmation. All artifacts are in English regardless of language pack.
 
 Each language pack's `CLAUDE.md` must include these rules under a `### Language` / `### 언어` section.
 

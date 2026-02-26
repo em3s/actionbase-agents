@@ -54,9 +54,9 @@ Examples:
 ## Language rules (must be in every CLAUDE.md)
 
 Every language pack's `CLAUDE.md` must include language rules under `### 언어` / `### Language`.
-The mode is determined by comparing `allowed_repo` and `upstream_repo` in `.claude/settings.local.json`.
+The mode is determined automatically from `git remote get-url origin`.
 
-### Fork mode (`allowed_repo ≠ upstream_repo`)
+### Fork mode (origin matches `*/actionbase` but not `kakao/actionbase`)
 | Context | Language |
 |---------|----------|
 | Conversation with user | Language pack language |
@@ -64,7 +64,7 @@ The mode is determined by comparing `allowed_repo` and `upstream_repo` in `.clau
 | Code and code comments | Always English |
 | Upstream artifacts (`/patch-upstream`) | Always English |
 
-### Upstream mode (`allowed_repo == upstream_repo`)
+### Non-fork mode (everything else)
 | Context | Language |
 |---------|----------|
 | Conversation with user | Language pack language |
