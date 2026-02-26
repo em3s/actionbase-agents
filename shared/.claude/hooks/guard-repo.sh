@@ -19,11 +19,21 @@ fi
 # if not configured, skip guard
 [ -z "$ALLOWED_REPO" ] && exit 0
 
-# gh write commands: -R must match allowed_repo (or omitted = current repo)
+# gh write commands
 if echo "$cmd" | grep -qE 'gh\s+(issue|pr)\s+(create|edit|close|reopen|comment|merge|review)'; then
-  if echo "$cmd" | grep -qE '(-R|--repo)' && ! echo "$cmd" | grep -qE "(-R|--repo)\s+$ALLOWED_REPO"; then
-    echo "BLOCK: Changes are only allowed in $ALLOWED_REPO." >&2
-    exit 1
+  if echo "$cmd" | grep -qE '(-R|--repo)'; then
+    # explicit -R: must match allowed_repo
+    if ! echo "$cmd" | grep -qE "(-R|--repo)\s+$ALLOWED_REPO"; then
+      echo "BLOCK: Changes are only allowed in $ALLOWED_REPO." >&2
+      exit 1
+    fi
+  else
+    # no -R: check gh default repo
+    DEFAULT_REPO="$(gh repo set-default --view 2>/dev/null || true)"
+    if [ -n "$DEFAULT_REPO" ] && ! echo "$DEFAULT_REPO" | grep -q "$ALLOWED_REPO"; then
+      echo "BLOCK: gh default repo is '$DEFAULT_REPO', not '$ALLOWED_REPO'. Use -R $ALLOWED_REPO or run: gh repo set-default $ALLOWED_REPO" >&2
+      exit 1
+    fi
   fi
 fi
 
