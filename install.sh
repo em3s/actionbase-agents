@@ -33,29 +33,7 @@ command -v tar  >/dev/null 2>&1 || die "tar not found."
 [[ -f settings.gradle.kts ]] || die "settings.gradle.kts not found. Run from actionbase project root."
 grep -q 'actionbase' settings.gradle.kts || die "Not an actionbase project (settings.gradle.kts missing 'actionbase')."
 
-# ── 3. language selection ─────────────────────────────────────────────
-
-select_language() {
-  exec 3<>/dev/tty 2>/dev/null || die "Cannot open terminal. Use --lang ko or --lang en."
-
-  printf "\n"           >&3
-  printf "  Select language / 언어를 선택하세요:\n" >&3
-  printf "\n"           >&3
-  printf "    1) 한국어 (Korean)\n" >&3
-  printf "    2) English\n" >&3
-  printf "\n"           >&3
-  printf "  > "         >&3
-
-  local choice
-  read -r choice <&3
-  exec 3<&-
-
-  case "$choice" in
-    1|ko|korean|한국어)  echo "ko" ;;
-    2|en|english|영어)   echo "en" ;;
-    *)                   die "Invalid selection: $choice" ;;
-  esac
-}
+# ── 3. parse args ────────────────────────────────────────────────────
 
 LANG_CODE=""
 while [[ $# -gt 0 ]]; do
@@ -64,15 +42,6 @@ while [[ $# -gt 0 ]]; do
     *)      die "Unknown option: $1" ;;
   esac
 done
-
-if [[ -z "$LANG_CODE" ]]; then
-  LANG_CODE="$(select_language)"
-fi
-
-case "$LANG_CODE" in
-  ko|en) ;;
-  *)     die "Unsupported language: $LANG_CODE (use ko or en)" ;;
-esac
 
 # ── 4. download tarball ──────────────────────────────────────────────
 
@@ -85,11 +54,63 @@ tar xzf "$TMP/archive.tar.gz" -C "$TMP"
 EXTRACT_DIR="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d | head -1)"
 [[ -d "$EXTRACT_DIR" ]] || die "Failed to extract tarball."
 
-LANG_DIR="$EXTRACT_DIR/$LANG_CODE"
 SHARED_DIR="$EXTRACT_DIR/shared"
-
-[[ -d "$LANG_DIR" ]]   || die "Language pack not found: $LANG_CODE"
 [[ -d "$SHARED_DIR" ]] || die "Shared config not found."
+
+# ── 5. language selection (from available packs in tarball) ──────────
+
+# detect language packs: directories containing CLAUDE.md, excluding shared/
+AVAILABLE_LANGS=()
+for d in "$EXTRACT_DIR"/*/; do
+  name="$(basename "$d")"
+  [[ "$name" == "shared" ]] && continue
+  [[ -f "$d/CLAUDE.md" ]] && AVAILABLE_LANGS+=("$name")
+done
+[[ ${#AVAILABLE_LANGS[@]} -gt 0 ]] || die "No language packs found in archive."
+
+if [[ -n "$LANG_CODE" ]]; then
+  # validate --lang argument
+  found=false
+  for l in "${AVAILABLE_LANGS[@]}"; do
+    [[ "$l" == "$LANG_CODE" ]] && found=true && break
+  done
+  $found || die "Unsupported language: $LANG_CODE (available: ${AVAILABLE_LANGS[*]})"
+elif [[ ${#AVAILABLE_LANGS[@]} -eq 1 ]]; then
+  # single language: auto-select with confirmation
+  LANG_CODE="${AVAILABLE_LANGS[0]}"
+  echo ""
+  echo "  Language: $LANG_CODE"
+else
+  # multiple languages: interactive menu
+  exec 3<>/dev/tty 2>/dev/null || die "Cannot open terminal. Use --lang <code>."
+  printf "\n"                                    >&3
+  printf "  Select language / 언어를 선택하세요:\n" >&3
+  printf "\n"                                    >&3
+  local_i=1
+  for l in "${AVAILABLE_LANGS[@]}"; do
+    printf "    %d) %s\n" "$local_i" "$l"        >&3
+    local_i=$((local_i + 1))
+  done
+  printf "\n"                                    >&3
+  printf "  > "                                  >&3
+  local choice
+  read -r choice <&3
+  exec 3<&-
+
+  # match by number or code
+  LANG_CODE=""
+  if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le ${#AVAILABLE_LANGS[@]} ]]; then
+    LANG_CODE="${AVAILABLE_LANGS[$((choice - 1))]}"
+  else
+    for l in "${AVAILABLE_LANGS[@]}"; do
+      [[ "$l" == "$choice" ]] && LANG_CODE="$l" && break
+    done
+  fi
+  [[ -n "$LANG_CODE" ]] || die "Invalid selection: $choice"
+fi
+
+LANG_DIR="$EXTRACT_DIR/$LANG_CODE"
+[[ -d "$LANG_DIR" ]] || die "Language pack not found: $LANG_CODE"
 
 # ── 5. install files ─────────────────────────────────────────────────
 

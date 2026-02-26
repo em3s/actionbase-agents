@@ -9,11 +9,12 @@ CONFIG=".claude/settings.local.json"
 # read allowed_repo from config
 ALLOWED_REPO=""
 if [ -f "$CONFIG" ]; then
-  ALLOWED_REPO="$(python3 -c "
-import json
-with open('$CONFIG') as f:
+  ALLOWED_REPO="$(python3 - "$CONFIG" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
     print(json.load(f).get('allowed_repo', ''))
-" 2>/dev/null)"
+PYEOF
+)" 2>/dev/null || true
 fi
 
 # if not configured, skip guard

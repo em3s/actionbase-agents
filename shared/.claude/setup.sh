@@ -32,27 +32,29 @@ detect_repo() {
 
 # read a key from settings.local.json
 read_config() {
-  python3 -c "
+  python3 - "$CONFIG" "$1" <<'PYEOF'
 import json, sys
-with open('$CONFIG') as f:
+config, key = sys.argv[1], sys.argv[2]
+with open(config) as f:
     d = json.load(f)
-v = d.get('$1')
+v = d.get(key)
 if v is not None:
     print(v)
-" 2>/dev/null
+PYEOF
 }
 
 # write a key-value to settings.local.json (preserves existing keys)
 write_config() {
-  python3 -c "
-import json
-with open('$CONFIG') as f:
+  python3 - "$CONFIG" "$1" "$2" <<'PYEOF'
+import json, sys
+config, key, value = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(config) as f:
     d = json.load(f)
-d['$1'] = '$2'
-with open('$CONFIG', 'w') as f:
+d[key] = value
+with open(config, 'w') as f:
     json.dump(d, f, indent=2, ensure_ascii=False)
     f.write('\n')
-"
+PYEOF
 }
 
 # prompt with default value, return user input or default
