@@ -20,7 +20,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 # ── helpers ───────────────────────────────────────────────────────────
 
-die()  { printf "ERROR: %s\n" "$*" >&2; exit 1; }
+die()  { printf "ERROR: %s\n" "$*"; exit 1; }
 info() { printf "  %s\n" "$*"; }
 
 # ── 1. prerequisites ─────────────────────────────────────────────────
