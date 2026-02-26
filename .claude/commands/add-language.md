@@ -51,9 +51,23 @@ Examples:
 - Run /sync-check to verify structure
 ```
 
+## Language rules (must be in every CLAUDE.md)
+
+Every language pack's `CLAUDE.md` must include these language rules under `### 언어` / `### Language`:
+
+| Context | Language |
+|---------|----------|
+| Conversation with user | Language pack language |
+| Personal fork artifacts (issues, PRs, commits) | Language pack language |
+| Code and code comments | Always English |
+| Upstream (`kakao/actionbase`) artifacts | Always English |
+
+When scaffolding, adapt these rules to the target language in the new `CLAUDE.md`.
+
 ## Rules
 
 - Never overwrite an existing language directory
 - Always clone from an existing, complete language pack
 - Pause for user confirmation before creating files
 - File content is copied as-is — translation is a separate step
+- Every new CLAUDE.md must include the language rules table above
