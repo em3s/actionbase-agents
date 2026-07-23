@@ -165,26 +165,31 @@ Mono.fromCallable { blockingStorageCall() }
 ## Git 워크플로우
 
 ### 브랜치 네이밍
+`type/short-slug`, 트래킹 이슈가 있으면 번호 포함:
 ```
-feature/add-bookmark-schema
-fix/null-userid-validation
-refactor/simplify-query-builder
+feat/issue-428-queue-v1
+fix/immutable-edge-no-cdc
+refactor/feature-flags
 ```
 
-### 커밋 형식
+### 커밋 제목
+행동 계약을 서술하는 평서형 제목. `type(scope):` 접두사 금지 (예외: 문서 전용 변경은 `docs:`).
 ```
-type(scope): description
-
-feat(core): add bookmark schema support
-fix(server): validate userId before processing
+Add scan-and-delete for immutable edge tables
+Preserve SYNC response contract under systemMutationMode=ASYNC
+docs: update build instructions
 ```
+- 식별자는 백틱, 연속 PR은 `(Step 2 of #422)`, 회귀 수정은 `(#309 regression)` 표기
 
 ### 규칙
-- main에 force push 금지
-- 머지 전 PR 리뷰 필수
-- 머지 전 CI 통과 확인
-- PR은 집중적이고 작게 유지
-- 명확한 메시지로 자주 커밋
+- **PR/이슈 생성 전 대상 레포 템플릿 확인 필수** — `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/`
+- squash merge — 커밋 1개 = PR 1개
+- **에이전트는 절대 머지하지 않는다** — 사용자가 최종 리뷰·머지
+- 죽은 코드 삭제는 기능 작업 전 별도 PR로 (Step 0)
+- 리팩토링 전에 기존 계약을 고정하는 테스트 먼저
+- PR은 집중적이고 작게 유지, 스코프 밖 변경은 별도 이슈로
+- 머지 전 CI 통과 확인, main에 force push 금지
+- 마무리: spotless → 빌드/테스트 → push → CI 확인
 
 ---
 

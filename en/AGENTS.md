@@ -164,26 +164,31 @@ Business logic should **read top-to-bottom in a single chain**. Don't extract co
 ## Git Workflow
 
 ### Branch Naming
+`type/short-slug`, include the tracking issue number when there is one:
 ```
-feature/add-bookmark-schema
-fix/null-userid-validation
-refactor/simplify-query-builder
+feat/issue-428-queue-v1
+fix/immutable-edge-no-cdc
+refactor/feature-flags
 ```
 
-### Commit Format
+### Commit Titles
+Plain imperative titles stating the behavioral contract. No `type(scope):` prefix (exception: `docs:` for documentation-only changes).
 ```
-type(scope): description
-
-feat(core): add bookmark schema support
-fix(server): validate userId before processing
+Add scan-and-delete for immutable edge tables
+Preserve SYNC response contract under systemMutationMode=ASYNC
+docs: update build instructions
 ```
+- Backticks for identifiers; mark sequences `(Step 2 of #422)` and regression fixes `(#309 regression)`
 
 ### Rules
-- No force push to main
-- PR review required before merge
-- CI must pass before merge
-- Keep PRs focused and small
-- Commit often with clear messages
+- **Always check the target repo's templates before creating a PR or issue** — `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/`
+- Squash merge — one commit = one PR
+- **The agent never merges** — the user does the final review and merge
+- Delete dead code in its own PR before the feature work (Step 0)
+- Before a refactor, add tests that pin the existing contract
+- Keep PRs focused and small; record out-of-scope changes as separate issues
+- CI must pass before merge; no force push to main
+- Finish with: spotless → build/test → push → check CI
 
 ---
 
