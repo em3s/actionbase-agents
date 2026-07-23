@@ -36,7 +36,7 @@ Ecosystem: `cli/`, `website/`, `docker/`, `bin/`, `dev/`, `guides/` — tools an
 - `agents/` — Delegated sub-agents (planner, architect, code-reviewer, security-reviewer, e2e-runner, refactor-cleaner)
 - `commands/` — Slash commands (plan, implement, continue, stage-to-issue, code-review, pr-english, patch-upstream, bedtime, reset-worktree)
 - `skills/` — Context skills (actionbase-concepts, v3-transition, strategic-compact, verification-loop, testing-guide)
-- `rules/` — Always-on guidelines (security, coding style, testing, git workflow, performance, language, agents, environment)
+- `rules/` — Always-on guidelines (security, coding style, writing style, testing, git workflow, performance, language, agents, environment)
 - `codemaps/` — Per-module codemaps, shared from `shared/.claude/codemaps/` (architecture, core, engine, server, data)
 
 ## Key Commands

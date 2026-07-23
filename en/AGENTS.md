@@ -192,6 +192,22 @@ docs: update build instructions
 
 ---
 
+## Writing Style
+
+Applies to all prose artifacts — PR/issue bodies, comments. Goal: text that reads like a developer wrote it.
+
+- Open with the problem or observation that motivated the change (why first). Never restate the title
+- Length proportional to the change — a trivial fix gets one or two sentences with no headers; delete empty sections or write "None."; no closing summary paragraph
+- First person, active, short declarative sentences, fragments fine. State verified facts plainly; flag only what you didn't verify
+- Trade-offs as one downside sentence plus a revisit condition. Name deferred work: "I'll leave that for a future PR."
+- **No artificial line breaks — one paragraph = one line.** Paragraphs run 1–4 sentences
+- Bullets are 3–6 terse imperatives; never re-enumerate the diff file-by-file; no bold-prefixed bullets
+- Paste evidence instead of describing it (logs in fenced blocks, CI runs as bare URLs)
+- Banned: marketing adjectives (robust, comprehensive, seamless), emoji as list decoration, AI attribution footers
+- Comments: short, warm, decisive. Own mistakes immediately
+
+---
+
 ## Security Rules (CRITICAL)
 
 ### Pre-commit Checklist

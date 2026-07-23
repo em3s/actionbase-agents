@@ -68,7 +68,7 @@ Return the PR URL when done.
 
 ## PR Style Guide
 
-[criccomini (Chris Riccomini)](https://github.com/slatedb/slatedb/pulls?q=is%3Apr+author%3Acriccomini) — inspired by the SlateDB maintainer's style.
+Follow the "Writing Style" rules in AGENTS.md for register and tone. Below is the PR structure guide.
 
 ### Template
 
@@ -81,8 +81,8 @@ Return the PR URL when done.
 
 ### Summary — Why This PR Exists
 
-- **First sentence**: What this PR does (one line)
-- **Background**: Motivation, related issues, RFCs, previous PRs
+- **Opening**: the problem, incident, or observation that motivated the change (why). What it does comes second
+- **Background**: related issues, RFCs, previous PRs
 - Bug fixes: describe the failure scenario in detail (timeline, race conditions, error logs)
 - Performance: include before/after numbers (`10-20ms → 1.5ms`)
 - Issue links: `Fixes #N` / `Closes #N`

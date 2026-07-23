@@ -28,7 +28,7 @@ ko/                         # Korean language pack
   .claude/                  #   Claude Code config
     agents/                 #     Sub-agent profiles (6)
     commands/               #     Slash commands: /plan, /implement, /code-review, etc. (9)
-    rules/                  #     Coding style, git workflow, security, performance, language (7)
+    rules/                  #     Coding style, git workflow, writing style, security, performance, language (8)
     skills/                 #     Domain knowledge: concepts, testing, v3 transition (5)
   .codex/                   #   Codex config overlay
     config.toml             #     Language-specific overrides

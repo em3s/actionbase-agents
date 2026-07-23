@@ -67,7 +67,7 @@ gh pr edit <number> --title "..." --body "..."
 
 ## PR Style Guide
 
-[criccomini (Chris Riccomini)](https://github.com/slatedb/slatedb/pulls?q=is%3Apr+author%3Acriccomini) — SlateDB 메인테이너 스타일 참고.
+문체와 레지스터는 `.claude/rules/writing-style.md`를 따른다. 아래는 PR 구조 가이드.
 
 ### Template
 
@@ -80,8 +80,8 @@ gh pr edit <number> --title "..." --body "..."
 
 ### 요약 — 이 PR이 존재하는 이유
 
-- **첫 문장**: 이 PR이 무엇을 하는지 (한 줄)
-- **배경**: 동기, 관련 이슈, RFC, 이전 PR
+- **여는 문장**: 변경의 동기가 된 문제·사건·관찰 (왜). 무엇을 하는지는 그다음
+- **배경**: 관련 이슈, RFC, 이전 PR
 - 버그 수정: 장애 시나리오를 구체적으로 기술 (타임라인, 레이스 컨디션, 에러 로그)
 - 성능: 전후 수치 포함 (`10-20ms → 1.5ms`)
 - 이슈 링크: `Fixes #N` / `Closes #N`
